@@ -1,0 +1,9 @@
+{
+  "smtpHost": "smtp.gmail.com",
+  "smtpPort": 587,
+  "sender": "your-account@example.com",
+  "recipients": ["team-member@example.com"],
+  "testRecipient": "your-test-address@example.com",
+  "noticeRecipient": "your-alert-address@example.com",
+  "sendTimeKst": "10:01"
+}

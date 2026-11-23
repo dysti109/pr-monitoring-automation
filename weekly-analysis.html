@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>경쟁사·시장 주간 분석</title>
+    <style>
+      :root { font-family: Pretendard, "Noto Sans KR", sans-serif; color: #28231f; background: #f6f2eb; }
+      body { margin: 0; } header { position: sticky; top: 0; background: #fffaf4; border-bottom: 1px solid #ded5ca; padding: 18px 28px; display:flex; align-items:center; gap:16px; z-index:2; }
+      h1 { font-size: 22px; margin: 0; } header a { color:#76513d; text-decoration:none; } button { margin-left:auto; border:0; border-radius:9px; padding:11px 16px; background:#b94f35; color:white; font-weight:700; cursor:pointer; }
+      button:disabled { opacity:.55; cursor:wait; } main { max-width:1280px; margin:24px auto; padding:0 22px 60px; } .summary { background:white; padding:20px; border-radius:13px; box-shadow:0 2px 10px #5d463218; line-height:1.7; }
+      .status { padding:50px; text-align:center; color:#746b63; } .card { background:white; margin-top:15px; padding:20px; border-radius:13px; box-shadow:0 2px 10px #5d463218; }
+      .progress { max-width:520px; margin:18px auto 0; text-align:left; } .progress-track { height:8px; border-radius:99px; background:#eee8df; overflow:hidden; } .progress-fill { height:100%; width:0; background:#b94f35; transition:width .25s ease; } .progress-label { margin-top:9px; font-size:13px; }
+      .meta { color:#756b63; font-size:13px; display:flex; flex-wrap:wrap; gap:8px; } .title { font-size:19px; margin:9px 0; } .title a { color:#29231f; } .badges { display:flex; gap:8px; margin:10px 0; } .badge { font-size:12px; font-weight:700; padding:5px 9px; border-radius:999px; background:#eee8df; } .badge.high { background:#ffe0d9; color:#a52e19; } .badge.medium { background:#fff0c7; color:#795400; }
+      .summaryText { font-weight:600; line-height:1.65; } dl { display:grid; grid-template-columns:150px 1fr; gap:8px 14px; line-height:1.55; } dt { font-weight:700; color:#65584f; } dd { margin:0; } @media(max-width:700px){dl{grid-template-columns:1fr} dd{margin-bottom:8px}}
+    </style>
+  </head>
+  <body>
+    <header><a href="/">← 기사 목록</a><h1>경쟁사 주간 분석</h1><button id="run">Codex로 새 분석</button></header>
+    <main><div id="content" class="status">저장된 분석을 확인하는 중입니다.</div></main>
+    <script type="module">
+      const content = document.querySelector('#content'); const run = document.querySelector('#run');
+      const esc = (v='') => String(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      const badgeClass = v => v === '높음' ? 'high' : v === '중간' ? 'medium' : '';
+      function render(data){
+        const coverage=(data.coverage||[]).map(c=>`${esc(c.company)} ${c.findingCount}건`).join(' · ');
+        content.className=''; content.innerHTML=`<section class="summary"><b>${esc(data.period)}</b><p>${esc(data.executiveSummary)}</p><div class="meta">검색 범위: ${coverage||'이전 형식의 보고서'}</div></section>` + data.articles.map(a=>`<article class="card"><div class="meta"><b>${esc(a.company)}</b><span>${esc(a.publisher)}</span><span>${esc(a.reporter)}</span><span>${esc(a.publishedAt)}</span></div><h2 class="title"><a href="${esc(a.url)}" target="_blank" rel="noreferrer">${esc(a.title)}</a></h2><p class="summaryText">${esc(a.summary)}</p><div class="badges"><span class="badge ${badgeClass(a.importance)}">중요도 ${esc(a.importance)} · ${esc(a.importanceReason)}</span><span class="badge ${badgeClass(a.threat)}">위협도 ${esc(a.threat)} · ${esc(a.threatReason)}</span></div><dl><dt>노출 채널 / 톤</dt><dd>${esc(a.channel)} · ${esc(a.tone)}</dd><dt>핵심 메시지</dt><dd>${esc(a.keyMessage)}</dd><dt>차별점</dt><dd>${esc(a.differentiation)}</dd><dt>정책/트렌드 연계</dt><dd>${esc(a.policyTrend)}</dd><dt>위협 신호</dt><dd>${esc(a.threatSignal)}</dd><dt>활용 포인트</dt><dd>${esc(a.actionPoint)}</dd></dl></article>`).join('');
+      }
+      async function load(){ const r=await fetch('/api/competitor-brief'); if(r.ok) render(await r.json()); else content.textContent='아직 생성된 분석이 없습니다. 오른쪽 위 버튼을 눌러 최초 분석을 실행하세요.'; }
+      function showProgress(job){
+        const p=job.progress||{}; const total=Number(p.totalTargets)||0; const done=Number(p.completedTargets)||0;
+        const percent=total?Math.min(100,Math.round(done/total*100)):5;
+        const phase=p.phase==='candidate-search'?'검색 후보 수집':p.phase==='finalizing'?'보고서 정리':'기사 원문 확인·분석';
+        const names=(p.activeCompanies||[]).join(', ');
+        content.className='status';
+        content.innerHTML=`<div>${phase} 중입니다. 기업별 결과는 완료되는 대로 저장됩니다.</div><div class="progress"><div class="progress-track"><div class="progress-fill" style="width:${percent}%"></div></div><div class="progress-label">${done}/${total||'…'} 대상 완료${names?` · 진행 중: ${esc(names)}`:''}</div></div>`;
+      }
+      async function loadJob(jobId){
+        while(true){
+          await new Promise(resolve=>setTimeout(resolve,2500));
+          const r=await fetch(`/api/competitor-brief?jobId=${encodeURIComponent(jobId)}`); const job=await r.json();
+          if(!r.ok) throw new Error(job.error||'진행 상태 조회 실패');
+          showProgress(job);
+          if(job.status==='completed'){ render(job.report); return; }
+          if(job.status==='failed') throw new Error(job.error||'분석 실패');
+        }
+      }
+      run.addEventListener('click', async()=>{ run.disabled=true; run.textContent='원문 검색·분석 중…'; content.className='status'; content.textContent='검색 결과를 모으고 있습니다.'; try { const r=await fetch('/api/competitor-brief?async=1&refresh=1',{method:'POST'}); const data=await r.json(); if(!r.ok) throw new Error(data.error||'분석 실패'); await loadJob(data.jobId); } catch(e){ content.className='status'; content.textContent=`분석 실패: ${e.message}`; } finally { run.disabled=false; run.textContent='Codex로 새 분석'; } });
+      load();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["period", "executiveSummary", "coverage", "articles"],
+  "properties": {
+    "period": { "type": "string" },
+    "executiveSummary": { "type": "string" },
+    "coverage": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["company", "searched", "findingCount", "note"],
+        "properties": {
+          "company": { "type": "string" },
+          "searched": { "type": "boolean", "enum": [true] },
+          "findingCount": { "type": "integer", "minimum": 0 },
+          "note": { "type": "string" }
+        }
+      }
+    },
+    "articles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["company", "publisher", "title", "reporter", "publishedAt", "url", "summary", "keywords", "issueKey", "topicKey", "contentAccess", "isPrimarySource", "uniqueInformation", "sourceCategory", "sourceReliability", "channel", "tone", "keyMessage", "differentiation", "policyTrend", "threatSignal", "actionPoint", "importance", "importanceReason", "threat", "threatReason"],
+        "properties": {
+          "company": { "type": "string" },
+          "publisher": { "type": "string" },
+          "title": { "type": "string" },
+          "reporter": { "type": "string" },
+          "publishedAt": { "type": "string" },
+          "url": { "type": "string" },
+          "summary": { "type": "string" },
+          "keywords": { "type": "array", "minItems": 3, "maxItems": 5, "items": { "type": "string" } },
+          "issueKey": { "type": "string" },
+          "topicKey": { "type": "string" },
+          "contentAccess": { "enum": ["원문 전체 확인", "일부 본문 확인", "제목·공개 정보만 확인", "공식 자료 확인"] },
+          "isPrimarySource": { "type": "boolean" },
+          "uniqueInformation": { "type": "string" },
+          "sourceCategory": { "enum": ["언론 보도", "공식기관 게시물", "블로그", "커뮤니티", "SNS·영상"] },
+          "sourceReliability": { "enum": ["높음", "중간", "낮음", "확인 필요"] },
+          "channel": { "type": "string" },
+          "tone": { "enum": ["우호", "중립", "비판", "판단 보류"] },
+          "keyMessage": { "type": "string" },
+          "differentiation": { "type": "string" },
+          "policyTrend": { "type": "string" },
+          "threatSignal": { "type": "string" },
+          "actionPoint": { "type": "string" },
+          "importance": { "enum": ["높음", "중간", "낮음", "판단 보류"] },
+          "importanceReason": { "type": "string" },
+          "threat": { "enum": ["높음", "중간", "낮음", "판단 보류"] },
+          "threatReason": { "type": "string" }
+        }
+      }
+    }
+  }
+}

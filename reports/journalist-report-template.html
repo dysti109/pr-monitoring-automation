@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PR 기자 디렉터리</title>
+  <style>
+    :root { color-scheme: light; --ink:#342b27; --muted:#776d67; --line:#e9dfd7; --paper:#fff; --wash:#f6f2ee; --accent:#874732; }
+    * { box-sizing:border-box; }
+    body { margin:0; padding:24px; color:var(--ink); background:var(--wash); font:16px/1.55 "Malgun Gothic",sans-serif; }
+    main { max-width:1400px; margin:auto; }
+    .page-head,.history-section { padding:28px; border:1px solid var(--line); border-radius:20px; background:var(--paper); }
+    .page-head { margin-bottom:20px; }
+    h1,h2,h3,p { margin-top:0; }
+    h1 { margin-bottom:8px; font-size:30px; }
+    .sub,.foot { color:var(--muted); }
+    a { color:var(--accent); }
+    .history-section { overflow:hidden; }
+    .stats,.reporter-panels,.reporter-grid { display:grid; gap:14px; }
+    .stats { grid-template-columns:repeat(4,minmax(0,1fr)); margin:20px 0; }
+    .stat,.reporter-panel,.reporter-card { padding:16px; border:1px solid var(--line); border-radius:14px; background:#fcfaf8; }
+    .stat b { display:block; color:var(--accent); font-size:22px; }
+    .reporter-panels { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .reporter-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .reporter-card { min-width:0; }
+    .reporter-card-head,.section-head,.reporter-meta { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .mini-tag,.rank-badge,.article-count,.updated-pill { display:inline-block; padding:3px 9px; border-radius:999px; background:#efe8e2; }
+    .company-tags { display:flex; flex-wrap:wrap; gap:5px; margin:8px 0; }
+    .reporter-extra { margin-top:10px; }
+    .reporter-extra summary,.directory summary { cursor:pointer; color:var(--accent); }
+    .extra-body { padding:12px 0 0; color:var(--muted); }
+    @media(max-width:760px) { body { padding:12px; } .page-head,.history-section { padding:18px; } .stats { grid-template-columns:repeat(2,minmax(0,1fr)); } .reporter-panels,.reporter-grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<main>
+  <header class="page-head">
+    <div class="sub">PR MONITORING · REPORTER DIRECTORY</div>
+    <h1>기자·매체 디렉터리</h1>
+    <p class="sub">누적 PR 기록에서 확인된 기자와 보도 매체를 정리해.</p>
+  </header>
+  <div id="reporter-history">
+<!-- PR_HISTORY_REPORTER_DATA_START -->
+<!-- PR_HISTORY_REPORTER_DATA_END -->
+  </div>
+  <p class="foot">기자 정보는 누적 PR 기록과 공개된 기사 정보를 바탕으로 정리.</p>
+</main>
+</body>
+</html>

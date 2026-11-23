@@ -1,0 +1,49 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+.pnpm-store/
+dist
+dist-ssr
+*.local
+*.tsbuildinfo
+config/*.local.json
+config/*.local.txt
+config/pr-monitoring.local.json
+# PR runtime data, search caches, and collection checkpoints are local data.
+reports/**
+!reports/.gitkeep
+!reports/journalist-report-template.html
+
+# One-off repair/import scripts may contain private history details.
+/scripts/import-*-history.mjs
+/scripts/repair-*.mjs
+
+# Standalone PR history embeds collected company coverage data.
+/PR_누적_히스토리_독립형.html
+
+# Rust / Cargo build output (the Cargo workspace root target dir)
+/target
+
+# Stray compiler scratch output
+a.out
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+
+# ralph-loop local state
+.claude/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

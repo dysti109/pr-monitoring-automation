@@ -1,0 +1,48 @@
+{
+  "primaryCompany": {
+    "name": "Primary Company",
+    "aliases": [],
+    "brands": [],
+    "businessAreas": [],
+    "officialBlogRss": "",
+    "officialBlogUrlPatterns": [],
+    "reporterExclusionPatterns": [],
+    "allowUnofficialSources": true,
+    "searchQueries": {
+      "base": [],
+      "pass2": [],
+      "pass3": []
+    }
+  },
+  "competitors": [
+    {
+      "name": "Competitor A",
+      "aliases": [],
+      "searchQueries": {
+        "base": [],
+        "pass2": [],
+        "pass3": []
+      }
+    }
+  ],
+  "comparableBusinesses": {
+    "name": "Comparable businesses",
+    "candidateNames": [],
+    "businessAreas": [],
+    "searchQueries": {
+      "base": [],
+      "pass2": [],
+      "pass3": []
+    }
+  },
+  "searchTerms": {
+    "businessAreas": [],
+    "businessEvents": [
+      "product launch",
+      "customer adoption",
+      "partnership",
+      "contract or award",
+      "investment or earnings"
+    ]
+  }
+}

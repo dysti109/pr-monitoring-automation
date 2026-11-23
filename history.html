@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PR 누적 히스토리</title>
+    <style>
+      :root { font-family: Pretendard, "Noto Sans KR", Arial, sans-serif; color: #2d2824; background: #f6f2eb; }
+      body { margin: 0; }
+      header { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; flex-wrap: wrap; gap: 16px; padding: 18px 28px; background: #fffaf4; border-bottom: 1px solid #ded5ca; }
+      header a { color: #76513d; text-decoration: none; font-size: 13px; }
+      h1 { margin: 0; font-size: 22px; }
+      main { max-width: 1180px; margin: 24px auto; padding: 0 22px 60px; }
+      .status, .card { background: #fff; border-radius: 14px; box-shadow: 0 2px 10px #5d463218; }
+      .status { padding: 40px; text-align: center; color: #746b63; }
+      .hero { padding: 22px; margin-bottom: 16px; }
+      .hero h2 { margin: 0 0 8px; font-size: 18px; color: #7b3f2e; }
+      .muted { color: #746b63; font-size: 13px; }
+      .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 16px 0; }
+      .metric { padding: 16px; background: #f3eee8; border-radius: 10px; text-align: center; }
+      .metric strong { display: block; font-size: 24px; color: #51382f; }
+      .metric span { font-size: 12px; color: #746b63; }
+      .candidate-names { display: block; margin-top: 6px; color: #51382f; font-size: 11px; line-height: 1.45; overflow-wrap: anywhere; }
+      .candidate-issue-topics { display: block; margin-top: 3px; color: #746b63; font-size: 11px; line-height: 1.45; }
+      .candidate-search, .primary-pr-search input, .primary-pr-search-controls input { border: 1px solid #e5d9ce; border-radius: 8px; padding: 7px 9px; background: #fff; color: #2d2824; font: inherit; font-size: 12px; }
+      .candidate-search { width: min(320px, 100%); margin: 0 0 10px; }
+      .candidate-scope-note { margin: -4px 0 12px; }
+      .candidate-source-links details { margin-top: 4px; }
+      .candidate-source-links summary { color: #76513d; cursor: pointer; font-size: 12px; }
+      .columns { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+      .card { padding: 20px; margin-bottom: 16px; }
+      .card h3 { margin: 0 0 12px; color: #7b3f2e; font-size: 16px; }
+      .insight-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .insight { padding: 15px 16px; border: 1px solid #eadfd5; border-left: 4px solid #b26d4f; border-radius: 10px; background: #fffaf6; }
+      .insight.high { border-left-color: #c33b32; background: #fff5f3; }
+      .insight h4 { margin: 0 0 7px; color: #6e3e2b; font-size: 14px; }
+      .insight p { margin: 0; line-height: 1.65; font-size: 13px; }
+      .badge { float: right; padding: 3px 7px; border-radius: 999px; background: #eee4dc; color: #76513d; font-size: 11px; }
+      .badge.high { background: #ffdcd7; color: #9a211d; }
+      .repeat-description { margin: 5px 0 2px; color: #514941; line-height: 1.6; }
+      .repeat-company-list { margin: 0; padding-left: 20px; line-height: 1.6; font-size: 13px; }
+      .repeat-company-list > li { margin: 0 0 12px; }
+      .repeat-topic-list { margin: 4px 0 0; padding-left: 20px; line-height: 1.6; }
+      .repeat-topic-list > li { margin: 5px 0 0; }
+      .repeat-topic-link { color: #76513d; font-weight: 500; text-decoration: none; }
+      .repeat-topic-link:hover { color: #9a4d32; text-decoration: underline; text-decoration-color: #d8c2b2; text-underline-offset: 3px; }
+      .reporter-outlet-list { color: #746b63; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+      .reporter-ranking-table th:nth-child(2), .reporter-ranking-table th:nth-child(3) { white-space: nowrap; }
+      .reporter-summary { min-width: 0; }
+      .primary-topic-link { color: #76513d; font-weight: 700; text-decoration: underline; text-decoration-color: #d8c2b2; text-underline-offset: 3px; }
+      .primary-topic-link:hover { color: #9a4d32; }
+      .primary-pr-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 14px; }
+      .primary-pr-group { min-width: 0; }
+      .primary-pr-group > b { display: block; padding-bottom: 6px; border-bottom: 1px solid #ece7e1; color: #6d5a4e; }
+      .primary-pr-group ul { padding-left: 18px; }
+      .primary-pr-group li { margin: 6px 0 10px; overflow-wrap: anywhere; }
+      .primary-pr-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin: 14px 0 8px; }
+      .primary-pr-toolbar p { margin: 0; }
+      .primary-pr-search-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 8px 0 12px; }
+      .primary-pr-search-controls label { display: inline-flex; align-items: center; gap: 5px; color: #746b63; font-size: 11px; }
+      .primary-pr-search-controls input[type="search"] { width: min(250px, 100%); }
+      .primary-pr-search-controls input[type="date"] { width: 128px; }
+      .primary-pr-filter { display: flex; flex-wrap: wrap; gap: 6px; }
+      .primary-pr-filter button { border: 1px solid #e5d9ce; border-radius: 999px; padding: 6px 11px; background: #fff; color: #6d5a4e; font: inherit; font-size: 12px; cursor: pointer; }
+      .primary-pr-filter button[aria-pressed="true"] { border-color: #7b3f2e; background: #7b3f2e; color: #fff; }
+      .primary-article-table-wrap { overflow-x: auto; border: 1px solid #eee6de; border-radius: 10px; }
+      .primary-article-table { min-width: 760px; }
+      .primary-article-more { display: block; margin: 10px auto 0; border: 1px solid #e5d9ce; border-radius: 999px; padding: 7px 14px; background: #fff; color: #76513d; font: inherit; font-size: 12px; cursor: pointer; }
+      .primary-article-more:hover { background: #faf7f3; }
+      .primary-article-table th { background: #faf7f3; white-space: nowrap; }
+      .primary-article-table td { padding: 12px 10px; }
+      .primary-article-date { min-width: 112px; white-space: nowrap; color: #746b63; font-size: 12px; }
+      .primary-article-source { min-width: 150px; }
+      .primary-article-source strong, .primary-article-source small { display: block; }
+      .primary-article-source small, .primary-article-material small { margin-top: 4px; color: #746b63; font-size: 11px; }
+      .primary-source-badge, .primary-signal { display: inline-block; border-radius: 999px; padding: 3px 7px; background: #f1ebe5; color: #76513d; font-size: 11px; white-space: nowrap; }
+      .primary-article-material { min-width: 260px; line-height: 1.5; }
+      .primary-article-material a { color: #51382f; font-weight: 700; text-decoration-color: #d8c2b2; text-underline-offset: 3px; }
+      .primary-article-summary { display: block; margin-top: 7px; color: #514941; font-size: 12px; line-height: 1.55; white-space: normal; }
+      .primary-report-overview { margin: 14px 0 10px; padding: 12px 14px; border-radius: 10px; background: #faf7f3; color: #514941; font-size: 12px; line-height: 1.6; }
+      .primary-report-topics { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+      .primary-report-topic { display: inline-block; max-width: 100%; box-sizing: border-box; border-radius: 999px; padding: 4px 8px; background: #eee6df; color: #614637; font-size: 11px; white-space: normal; overflow-wrap: anywhere; }
+      .primary-reputation-cell { min-width: 145px; }
+      .primary-signal + .primary-signal { margin-left: 4px; }
+      .primary-signal.positive { background: #e9f3ec; color: #28623d; }
+      .primary-signal.neutral { background: #f1eee9; color: #62594f; }
+      .primary-signal.caution { background: #fff0d9; color: #8b5900; }
+      .primary-signal.negative { background: #ffe2df; color: #a42a22; }
+      .primary-reputation-cell small { display: block; margin-top: 5px; color: #746b63; line-height: 1.45; }
+      .primary-extra-coverage { display: block; margin-top: 5px; color: #746b63; font-size: 11px; }
+      table { width: 100%; border-collapse: collapse; font-size: 13px; }
+      th, td { padding: 9px 7px; border-top: 1px solid #ece7e1; text-align: left; vertical-align: top; }
+      th { color: #6d5a4e; font-size: 12px; }
+      td.num { text-align: center; width: 70px; }
+      ul { margin: 0; padding-left: 20px; line-height: 1.7; font-size: 13px; }
+      .empty { color: #746b63; font-size: 13px; }
+      @media (max-width: 760px) { .grid, .columns, .insight-grid, .primary-pr-groups { grid-template-columns: 1fr; } header { padding: 15px 18px; } main { padding: 0 14px 40px; } }
+    </style>
+  </head>
+  <body>
+    <header><a href="/">기사 목록</a><h1>주 대상 평판·PR 누적 히스토리</h1></header>
+    <main id="content" class="status">누적 데이터를 불러오는 중입니다.</main>
+    <script>
+      const content = document.querySelector('#content');
+      const esc = (value = '') => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      const reputationTopicLabel = (name, articleTitle = '') => {
+        const rawName = String(name || '').trim();
+        let label = /^[a-z0-9_-]+$/i.test(rawName) && articleTitle ? String(articleTitle) : rawName;
+        label = label.replace(/^\s*(?:\[[^\]]+\]\s*)+/, '').replace(/[“”‘’"']/g, '')
+          .replace(/(?:…|\.{2,}).*$/, '')
+          .replace(/\s*(?:밝혔다|전했다|보도했다|소개했다|설명했다|추진한다|확대한다|강화한다|도입한다|확장한다|운영한다|제공한다|출시했다|수주했다|모집한다|했습니다|합니다|했다|한다|됐다|된다|예정이다|계획이다|[^\s.!?。]+다|[^\s.!?。]+요|[^\s.!?。]+죠)[.!?。]*$/, '')
+          .replace(/[.!?。]+$/, '').trim();
+        if (/[가-힣]/.test(label) && label.length <= 36 && !/(?:다|요|죠|습니다)[.!?。]*$/.test(label)) return label;
+        return /[가-힣]/.test(label) ? label.slice(0, 36).trim() : (rawName || '소재 미분류');
+      };
+      const repeatedTopicLabel = item => {
+        if (item.displayTopicLabel) return item.displayTopicLabel;
+        const key = String(item.topicKey || '').trim();
+        if (/[가-힣]/.test(key) && key.length <= 32 && !/(?:관련|주요|동향)/.test(key) && !/(?:다|요|죠|습니다)[.!?。]*$/.test(key)) return key.replace(/[.!?。]+$/, '');
+        const company = String(item.company || '').trim();
+        const description = String(item.description || '').trim();
+        const withoutCompany = company && description.startsWith(company)
+          ? description.slice(company.length).replace(/^(?:은|는|이|가|의)?\s*/, '')
+          : description;
+        const nounSummary = withoutCompany.replace(/\s*(?:밝혔다|소개했다|발표했다|운영한다|제공한다|공급했다|구축한다|확대한다|도입했다|체결했다|선정됐다|인수했다|수상했다|전했다|보도했다|설명했다|[^\s.!?。]+다|[^\s.!?。]+요|[^\s.!?。]+죠)\.?$/, '').trim();
+        if (/[가-힣]/.test(nounSummary) && nounSummary.length <= 38) return nounSummary;
+        const headline = String(item.representativeTitle || '').trim();
+        const headlineLabel = company && headline.startsWith(company)
+          ? headline.slice(company.length).replace(/^[,，\s]+/, '')
+          : headline;
+        const cleanedHeadline = headlineLabel.replace(/[“”‘’"']/g, '').replace(/\s*(?:밝혔다|추진한다|확대한다|도입한다|제공한다|체결했다|설명했다)[.!?。]*$/, '').trim();
+        return /[가-힣]/.test(cleanedHeadline) ? cleanedHeadline.slice(0, 38) : '소재명 확인 필요';
+      };
+      const repeatedTopicLink = item => esc(repeatedTopicLabel(item));
+      const repeatedTopicArticleLink = item => {
+        const label = esc(repeatedTopicLabel(item));
+        const matchedArticle = (item.sourceArticles || []).find(article => article.title === item.representativeTitle && /^https?:\/\//i.test(String(article.url || '')));
+        const url = /^https?:\/\//i.test(String(item.representativeUrl || '')) ? String(item.representativeUrl) : String(matchedArticle?.url || '');
+        return url ? `<a class="repeat-topic-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer" title="대표 기사: ${esc(item.representativeTitle || label)}">${label}</a>` : `<span class="repeat-topic-link">${label}</span>`;
+      };
+      const rows = (items, kind) => (items || []).slice(0, 10).map(item => {
+        const count = kind === 'company' ? item.issueCount : item.count;
+        const exposure = kind === 'company' ? item.exposureCount : '';
+        return `<tr><td>${esc(item.name || '')}</td><td class="num">${esc(count ?? '')}</td><td class="num">${esc(exposure)}</td></tr>`;
+      }).join('');
+      const sourceLinks = items => {
+        const links = (items || []).filter(item => /^https?:\/\//i.test(String(item.url || ''))).map(item => {
+          const label = item.publisher ? `${item.publisher} 원문` : '기사 원문';
+          return `<a href="${esc(item.url)}" target="_blank" rel="noopener noreferrer" title="${esc(item.title || label)}">${esc(label)}</a>`;
+        });
+        if (links.length < 2) return links[0] || '';
+        return `<div class="candidate-source-links">${links[0]}<details><summary>추가 원문 ${links.length - 1}건</summary>${links.slice(1).join('<br>')}</details></div>`;
+      };
+      const primaryTopicRow = topic => {
+        const label = reputationTopicLabel(topic.name);
+        const article = topic.representativeArticle || topic.sourceArticles?.[0];
+        const safeUrl = /^https?:\/\//i.test(String(article?.url || '')) ? String(article.url) : '';
+        const title = String(article?.title || label);
+        const normalizeText = value => String(value || '').toLowerCase().replace(/[\s\p{P}\p{S}]/gu, '');
+        const titleText = normalizeText(title);
+        const labelText = normalizeText(label);
+        const showTopicLabel = labelText && !titleText.includes(labelText) && !labelText.includes(titleText);
+        const titleMarkup = safeUrl
+          ? `<a class="primary-topic-link" href="${esc(safeUrl)}" target="_blank" rel="noopener noreferrer" title="대표 기사: ${esc(title)}">${esc(title)}</a>`
+          : esc(label);
+        const topicContext = showTopicLabel ? `${esc(label)} · ` : '';
+        const publisher = article?.publisher ? ` · ${esc(article.publisher)}` : '';
+        return `<li>${titleMarkup}<div class="muted">${topicContext}${esc(topic.count)}건${publisher}</div></li>`;
+      };
+      const formatKstDate = value => {
+        let source = String(value || '').trim();
+        if (!source) return '날짜 확인 불가';
+        source = source.replace(/(?:\s|\[)(?:Asia\/Seoul|KST)\]?\s*$/i, '').replace(/\s+(UTC|GMT)$/i, 'Z').replace(' ', 'T');
+        if (!/(?:Z|[+-]\d{2}:?\d{2})$/i.test(source)) source += '+09:00';
+        const date = new Date(source);
+        if (Number.isNaN(date.getTime())) return String(value).replace(/\s+(Asia\/Seoul|KST)$/i, '');
+        const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(date).map(part => [part.type, part.value]));
+        return parts.year + '-' + parts.month + '-' + parts.day + ' ' + parts.hour + ':' + parts.minute;
+      };
+      const primaryArticleRows = items => (items || []).map((item, index) => {
+        const safeUrl = /^https?:\/\//i.test(String(item.url || '')) ? String(item.url) : '';
+        const isOwnedBlog = item.sourceLabel === '자사 블로그 글';
+        const isOnlinePost = item.sourceLabel === '온라인 게시글';
+        const displayTitle = String(item.title || (safeUrl ? '원문 보기' : '제목 확인 불가')).replace(/^\s*(?:\[자사 블로그 글\]\s*)+/g, '').trim();
+        const title = safeUrl ? '<a href="' + esc(safeUrl) + '" target="_blank" rel="noopener noreferrer">' + esc(displayTitle) + '</a>' : esc(displayTitle);
+        const reporter = String(item.reporter || '').trim() || '기자 정보 없음';
+        const tone = String(item.tone || '판단 보류');
+        const risk = String(item.reputationRisk || '판단 보류');
+        const toneClass = tone === '우호' ? 'positive' : tone === '비판' ? 'negative' : tone === '판단 보류' ? 'caution' : 'neutral';
+        const riskClass = risk === '높음' ? 'negative' : risk === '중간' ? 'caution' : risk === '낮음' ? 'positive' : 'neutral';
+        const isEditorialCoverage = item.sourceLabel === '언론 보도' || item.sourceLabel === '공시·기관';
+        const fullSummary = isEditorialCoverage ? String(item.contentSummary || '').replace(/\s+/g, ' ').trim() : '';
+        const sentenceEnd = fullSummary.search(/[.!?。](?:\s|$)/);
+        const summary = (sentenceEnd >= 0 ? fullSummary.slice(0, sentenceEnd + 1) : fullSummary)
+          .replace(/^(?:외부 언론은|자사 공식 발신:)\s*/, '')
+          .replace(/하였습니다(?=\.|$)/g, '한다')
+          .replace(/했습니다(?=\.|$)/g, '한다')
+          .replace(/합니다(?=\.|$)/g, '한다')
+          .replace(/입니다(?=\.|$)/g, '이다')
+          .replace(/있습니다(?=\.|$)/g, '있다')
+          .replace(/보입니다(?=\.|$)/g, '보인다');
+        const summaryMarkup = summary ? '<span class="primary-article-summary">' + esc(summary) + '</span>' : '';
+        const reason = String(item.reputationReason || '').trim();
+        const hideRiskAssessment = isOwnedBlog || isOnlinePost;
+        const isLowConcern = ['우호', '중립'].includes(tone) && ['낮음', '해당 없음'].includes(risk);
+        const riskMarkup = hideRiskAssessment ? '' : '<span class="primary-signal ' + riskClass + '">위험 ' + esc(risk) + '</span>';
+        const reasonMarkup = !hideRiskAssessment && !isLowConcern && reason ? '<small>' + esc(reason) + '</small>' : '';
+        const sourceGroup = isOwnedBlog ? 'owned-blog' : isOnlinePost ? 'online' : 'media';
+        const dateLabel = formatKstDate(item.publishedAt);
+        const searchText = [item.title, item.publisher, reporter, item.topic, item.contentSummary, dateLabel].join(' ').toLocaleLowerCase('ko-KR');
+        return '<tr data-index="' + index + '" data-source="' + sourceGroup + '" data-date="' + esc(dateLabel.slice(0, 10)) + '" data-search="' + esc(searchText) + '"><td class="primary-article-date">' + esc(dateLabel) + '</td><td class="primary-article-source"><span class="primary-source-badge">' + esc(item.sourceLabel || '출처 미분류') + '</span><strong style="margin-top:5px">' + esc(item.publisher || '매체 확인 불가') + '</strong><small>' + esc(reporter) + '</small></td><td class="primary-article-material">' + title + summaryMarkup + '</td><td class="primary-reputation-cell"><span class="primary-signal ' + toneClass + '">' + esc(tone) + '</span>' + riskMarkup + reasonMarkup + '</td></tr>';
+      }).join('');
+      const reporterMinimumCount = 5;
+      const reporterRows = items => (items || []).filter(item => Number(item.count || 0) >= reporterMinimumCount).slice(0, 10).map(item => {
+        const contacts = (item.contacts || []).map(contact => {
+          const value = String(contact.value || '').trim();
+          const href = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+            ? `mailto:${value}`
+            : /^\+?[\d ()-]{7,}$/.test(value) ? `tel:${value.replace(/[^+\d]/g, '')}` : '';
+          const contactLabel = href ? `<a href="${esc(href)}">${esc(value)}</a>` : esc(value);
+          const sourceUrl = /^https?:\/\//i.test(String(contact.url || '')) ? String(contact.url) : '';
+          const sourceLink = sourceUrl ? ` <a href="${esc(sourceUrl)}" target="_blank" rel="noopener noreferrer">출처</a>` : '';
+          return `<span>${contactLabel}${sourceLink}</span>`;
+        }).join('<br>');
+        const publishers = item.publishers || [];
+        const publisherSummary = publishers.length
+          ? `<span class="reporter-outlet-list">${publishers.slice(0, 3).map(publisher => `${esc(publisher.name)} ${esc(publisher.count)}건`).join(' · ')}</span>`
+          : '<span class="muted">매체 정보 없음</span>';
+        return `<tr><td>${esc(item.name || '')}${contacts ? `<br><small>${contacts}</small>` : ''}</td><td colspan="2"><div class="reporter-summary">${publisherSummary}</div></td></tr>`;
+      }).join('');
+      function render(data) {
+        const companies = rows(data.companies, 'company');
+        const mediaMinimumCount = 10;
+        const mediaEntries = (data.media || []).filter(item => Number(item.count || 0) >= mediaMinimumCount);
+        const reporterEntries = (data.reporters || []).filter(item => Number(item.count || 0) >= reporterMinimumCount);
+        const media = rows(mediaEntries, 'media');
+        const reporters = reporterRows(reporterEntries);
+        const repeatMinimumArticleCount = 5;
+        const repeatedIssueGroups = new Map();
+        for (const item of (data.repeatedIssues || []).filter(item => item.collectionGroup !== 'A')) {
+          let displayTopicLabel = repeatedTopicLabel(item);
+          let identityLabel = displayTopicLabel;
+          const identity = identityLabel.normalize('NFKC').toLocaleLowerCase('ko-KR').replace(/[\s·ㆍ,，:：;；/＿_-]/g, '');
+          const groupKey = `${item.company}|${identity}`;
+          const group = repeatedIssueGroups.get(groupKey) || { ...item, displayTopicLabel, coverageCount: 0 };
+          group.coverageCount += Number(item.coverageCount || 0);
+          if (!group.representativeUrl && item.representativeUrl) {
+            group.representativeUrl = item.representativeUrl;
+            group.representativeTitle = item.representativeTitle;
+            group.sourceArticles = item.sourceArticles || [];
+          }
+          repeatedIssueGroups.set(groupKey, group);
+        }
+        const repeatedIssues = [...repeatedIssueGroups.values()].filter(item => item.coverageCount >= repeatMinimumArticleCount).sort((a, b) => b.coverageCount - a.coverageCount || a.company.localeCompare(b.company, 'ko'));
+        const leadingRepeat = repeatedIssues[0];
+        const insightItems = (data.insights || []).filter(item => item.type !== 'repeat');
+        if (leadingRepeat) insightItems.push({ type: 'repeat', title: '반복 보도 소재', repeatItem: leadingRepeat, priority: '보통' });
+        const insights = insightItems.map(item => {
+          const detail = item.repeatItem
+            ? `${esc(item.repeatItem.company)}의 ${repeatedTopicLink(item.repeatItem)} 소재가 개별 기사 ${esc(item.repeatItem.coverageCount)}건으로 반복 보도되었습니다.`
+            : esc(item.detail);
+          return `<article class="insight ${item.priority === '높음' ? 'high' : ''}"><span class="badge ${item.priority === '높음' ? 'high' : ''}">${esc(item.priority || '보통')}</span><h4>${esc(item.title)}</h4><p>${detail}</p></article>`;
+        }).join('');
+        const candidates = (data.candidates || []).map(item => `<li><b>${esc(item.name)}</b> · 이슈 ${esc(item.issueCount)}건 / 노출 ${esc(item.exposureCount)}건 · ${esc(item.reason)}</li>`).join('');
+        const repeatedByCompany = new Map();
+        for (const item of repeatedIssues) {
+          if (!repeatedByCompany.has(item.company)) repeatedByCompany.set(item.company, []);
+          repeatedByCompany.get(item.company).push(item);
+        }
+        const repeats = [...repeatedByCompany].map(([company, items]) => `<li><b>${esc(company)}</b><ul class="repeat-topic-list">${items.map(item => `<li>${repeatedTopicArticleLink(item)} · 기사 ${esc(item.coverageCount)}건</li>`).join('')}</ul></li>`).join('');
+        content.className = '';
+        content.innerHTML = `<section class="card hero"><h2>최근 ${esc(data.windowDays)}일 누적 PR 인사이트</h2><div class="muted">누적 실행 ${esc(data.archivedRuns)}회 · 중복 제거 이슈 ${esc(data.issueCount)}건 · 원문 콘텐츠 ${esc(data.rawContentCount ?? data.uniqueArticleCount)}건 · 기준 시각 ${esc(data.asOf)}</div><div class="muted">기사 수집 기간: ${esc(data.collectionPeriodSummary || '기간 정보 없음')}</div><div class="grid"><div class="metric"><strong>${esc(data.rawContentCount ?? data.uniqueArticleCount)}</strong><span>원문 콘텐츠</span></div><div class="metric"><strong>${esc(data.issueCount)}</strong><span>통합 이슈</span></div><div class="metric"><strong>${esc((data.candidates || []).length)}</strong><span>신규 모니터링 후보</span></div><div class="metric"><strong>${esc((data.repeatedIssues || []).length)}</strong><span>반복 보도 이슈</span></div><div class="metric"><strong>${esc(data.archivedRuns)}</strong><span>누적 실행</span></div></div></section><section class="card"><h3>누적 데이터 기반 인사이트</h3>${insights ? `<div class="insight-grid">${insights}</div>` : '<div class="empty">아직 분석할 누적 데이터가 없습니다.</div>'}</section><div class="columns"><section class="card"><h3>지속 모니터링 후보</h3>${candidates ? `<ul>${candidates}</ul>` : '<div class="empty">아직 후보가 없습니다.</div>'}</section><section class="card"><h3>반복 보도 이슈</h3>${repeats ? `<ul class="repeat-company-list">${repeats}</ul>` : '<div class="empty">아직 반복 이슈가 없습니다.</div>'}</section></div><div class="columns"><section class="card"><h3>기업 노출 순위</h3><table><thead><tr><th>기업</th><th>이슈 수</th><th>노출 수</th></tr></thead><tbody>${companies || '<tr><td colspan="3" class="empty">데이터 없음</td></tr>'}</tbody></table></section><section class="card"><h3>언론사·기자 순위</h3><table><thead><tr><th>언론사</th><th>기사 수</th><th></th></tr></thead><tbody>${media || '<tr><td colspan="3" class="empty">언론사 데이터 없음</td></tr>'}</tbody></table><table style="margin-top:16px"><thead><tr><th>기자</th><th>주요 언론사 (상위 3개)</th></tr></thead><tbody>${reporters || '<tr><td colspan="2" class="empty">기자 데이터 없음</td></tr>'}</tbody></table></section></div>`;
+        content.innerHTML = `<section class="card hero"><h2>최근 ${esc(data.windowDays)}일 누적 PR 인사이트</h2><div class="muted">누적 실행 ${esc(data.archivedRuns)}회 · 중복 제거 이슈 ${esc(data.issueCount)}건 · 원문 콘텐츠 ${esc(data.rawContentCount ?? data.uniqueArticleCount)}건 · 기준 시각 ${esc(data.asOf)}</div><div class="muted">기사 수집 기간: ${esc(data.collectionPeriodSummary || '기간 정보 없음')}</div><div class="grid"><div class="metric"><strong>${esc(data.rawContentCount ?? data.uniqueArticleCount)}</strong><span>원문 콘텐츠</span></div><div class="metric"><strong>${esc(data.issueCount)}</strong><span>통합 이슈</span></div><div class="metric"><strong>${esc((data.candidates || []).length)}</strong><span>신규 모니터링 후보</span></div><div class="metric"><strong>${esc(repeatedIssues.length)}</strong><span>반복 보도 이슈 (기사 5건 이상)</span></div><div class="metric"><strong>${esc(data.archivedRuns)}</strong><span>누적 실행</span></div></div></section><section class="card"><h3>누적 데이터 기반 인사이트</h3>${insights ? `<div class="insight-grid">${insights}</div>` : '<div class="empty">아직 분석할 누적 데이터가 없습니다.</div>'}</section><div class="columns"><section class="card"><h3>지속 모니터링 후보</h3>${candidates ? `<ul>${candidates}</ul>` : '<div class="empty">아직 후보가 없습니다.</div>'}</section><section class="card"><h3>반복 보도 이슈 · 동일 소재 기사 5건 이상</h3>${repeats ? `<ul class="repeat-company-list">${repeats}</ul>` : '<div class="empty">동일 소재 기사가 5건 이상인 반복 이슈가 없습니다.</div>'}</section></div><div class="columns"><section class="card"><h3>기업 노출 순위</h3><table><thead><tr><th>기업</th><th>이슈 수</th><th>노출 수</th></tr></thead><tbody>${companies || '<tr><td colspan="3" class="empty">데이터 없음</td></tr>'}</tbody></table></section><section class="card"><h3>언론사·기자 순위</h3><table><thead><tr><th>언론사</th><th>기사 수</th><th></th></tr></thead><tbody>${media || '<tr><td colspan="3" class="empty">언론사 데이터 없음</td></tr>'}</tbody></table><table style="margin-top:16px"><thead><tr><th>기자</th><th>기사 수</th><th></th></tr></thead><tbody>${reporters || '<tr><td colspan="3" class="empty">기자 데이터 없음</td></tr>'}</tbody></table></section></div>`;
+        content.innerHTML = `<section class="card hero"><h2>최근 ${esc(data.windowDays)}일 누적 PR 인사이트</h2><div class="muted">누적 실행 ${esc(data.archivedRuns)}회 · 중복 제거 이슈 ${esc(data.issueCount)}건 · 원문 콘텐츠 ${esc(data.rawContentCount ?? data.uniqueArticleCount)}건 · 기준 시각 ${esc(data.asOf)}</div><div class="muted">기사 수집 기간: ${esc(data.collectionPeriodSummary || '기간 정보 없음')}</div><div class="grid"><div class="metric"><strong>${esc(data.rawContentCount ?? data.uniqueArticleCount)}</strong><span>원문 콘텐츠</span></div><div class="metric"><strong>${esc(data.issueCount)}</strong><span>통합 이슈</span></div><div class="metric"><strong>${esc((data.candidates || []).length)}</strong><span>신규 모니터링 후보</span></div><div class="metric"><strong>${esc((data.repeatedIssues || []).length)}</strong><span>반복 보도 이슈</span></div><div class="metric"><strong>${esc(data.archivedRuns)}</strong><span>누적 실행</span></div></div></section><section class="card"><h3>누적 데이터 기반 인사이트</h3>${insights ? `<div class="insight-grid">${insights}</div>` : '<div class="empty">아직 분석할 누적 데이터가 없습니다.</div>'}</section><div class="columns"><section class="card"><h3>지속 모니터링 후보</h3>${candidates ? `<ul>${candidates}</ul>` : '<div class="empty">아직 후보가 없습니다.</div>'}</section><section class="card"><h3>반복 보도 이슈</h3>${repeats ? `<ul class="repeat-company-list">${repeats}</ul>` : '<div class="empty">아직 반복 이슈가 없습니다.</div>'}</section></div><div class="columns"><section class="card"><h3>기업 노출 순위</h3><table><thead><tr><th>기업</th><th>이슈 수</th><th>노출 수</th></tr></thead><tbody>${companies || '<tr><td colspan="3" class="empty">데이터 없음</td></tr>'}</tbody></table></section><section class="card"><h3>언론사·기자 순위</h3><table><thead><tr><th>언론사</th><th>기사 수</th><th></th></tr></thead><tbody>${media || '<tr><td colspan="3" class="empty">언론사 데이터 없음</td></tr>'}</tbody></table><table style="margin-top:16px"><thead><tr><th>기자</th><th>기사 수</th><th></th></tr></thead><tbody>${reporters || '<tr><td colspan="3" class="empty">기자 데이터 없음</td></tr>'}</tbody></table></section></div>`;
+        const historyScope = data.windowLabel || (data.windowDays ? `최근 ${data.windowDays}일` : '전체 보관 누적기간');
+        const historyHeading = content.querySelector('.hero h2');
+        if (historyHeading) historyHeading.textContent = `${historyScope} PR 인사이트`;
+        const archiveNote = document.createElement('div');
+        archiveNote.className = 'muted';
+        archiveNote.textContent = `저장된 전체 기록 기준 · 최대 ${data.archiveLimit || 180}회분 보관 · 현재 ${data.archivedRuns}회분 집계`;
+        content.querySelector('.hero')?.append(archiveNote);
+        const rankingSection = [...content.querySelectorAll('section.card')].find(section => section.querySelector('h3')?.textContent.trim() === '언론사·기자 순위');
+        if (rankingSection) {
+          const rankingNote = document.createElement('div');
+          rankingNote.className = 'muted';
+          rankingNote.style.margin = '6px 0 12px';
+          rankingNote.textContent = `${historyScope} 기준 · 언론사 기사 ${mediaMinimumCount}건 이상 · 기자 기사 ${reporterMinimumCount}건 이상 · 각 상위 10명/곳 · 기자별 주요 언론사는 기사 수 상위 3개 (기간 중복 기사는 1회 집계)`;
+          rankingSection.querySelector('h3')?.after(rankingNote);
+          const rankingTables = rankingSection.querySelectorAll('table');
+          const mediaHeader = rankingTables[0]?.querySelector('thead th:first-child');
+          const reporterHeader = rankingTables[1]?.querySelector('thead th:first-child');
+          if (mediaHeader) mediaHeader.textContent = `언론사 (${mediaMinimumCount}건 이상)`;
+          if (reporterHeader) reporterHeader.textContent = `기자 (${reporterMinimumCount}건 이상)`;
+          const reporterTableHead = rankingTables[1]?.querySelector('thead tr');
+          if (reporterTableHead) {
+            if (reporterTableHead.cells[1]) {
+              reporterTableHead.cells[1].textContent = '주요 매체';
+              reporterTableHead.cells[1].colSpan = 2;
+            }
+            if (reporterTableHead.cells[2]) reporterTableHead.cells[2].remove();
+          }
+          if (reporterTableHead && reporterTableHead.cells.length < 3) {
+            const summaryHeader = reporterTableHead.cells[1];
+            if (summaryHeader) {
+              summaryHeader.textContent = '주요 매체';
+              summaryHeader.colSpan = 2;
+            }
+          }
+          if (rankingTables[1]?.querySelector('tbody .empty')) rankingTables[1].querySelector('tbody .empty').colSpan = 3;
+          for (const table of rankingTables) {
+            table.style.tableLayout = 'fixed';
+            let columns = table.querySelector('colgroup');
+            if (!columns) {
+              columns = document.createElement('colgroup');
+              table.insertBefore(columns, table.firstChild);
+            }
+            columns.innerHTML = '<col style="width:64%"><col style="width:14%"><col style="width:22%">';
+          }
+          rankingTables[1]?.classList.add('reporter-ranking-table');
+          if (!mediaEntries.length) {
+            const empty = rankingTables[0]?.querySelector('.empty');
+            if (empty) empty.textContent = `${mediaMinimumCount}건 이상 보도한 언론사가 없습니다.`;
+          }
+          if (!reporterEntries.length) {
+            const empty = rankingTables[1]?.querySelector('.empty');
+            if (empty) empty.textContent = `${reporterMinimumCount}건 이상 언급된 기자가 없습니다.`;
+          }
+        }
+        const repeatMetric = [...content.querySelectorAll('.metric')].find(item => item.querySelector('span')?.textContent.includes('반복 보도 이슈'));
+        if (repeatMetric) {
+          repeatMetric.querySelector('strong').textContent = String(repeatedIssues.length);
+          repeatMetric.querySelector('span').textContent = '반복 보도 이슈 · 기사 5건 이상';
+        }
+        const repeatSection = [...content.querySelectorAll('section.card')].find(section => section.querySelector('h3')?.textContent.trim() === '반복 보도 이슈');
+        if (repeatSection) {
+          repeatSection.querySelector('h3').textContent = '반복 보도 이슈 · 동일 소재 기사 5건 이상';
+          const emptyMessage = repeatSection.querySelector('.empty');
+          if (emptyMessage && !repeatedIssues.length) emptyMessage.textContent = '동일 소재 기사가 5건 이상인 반복 이슈가 없습니다.';
+        }
+        const candidateSection = [...content.querySelectorAll('section.card')].find(section => section.querySelector('h3')?.textContent.trim() === '지속 모니터링 후보');
+        if (candidateSection) {
+          const reputationData = data.primaryReputation || {};
+          const entries = reputationData.articleEntries || [];
+          const reportEntries = entries.filter(item => item.sourceLabel !== '자사 블로그 글');
+          const reportExposureCount = reportEntries.reduce((sum, item) => sum + Math.max(1, Number(item.coverageCount || 1)), 0);
+          const reportToneCounts = reportEntries.reduce((counts, item) => {
+            const tone = String(item.tone || '판단 보류');
+            counts[tone] = (counts[tone] || 0) + Math.max(1, Number(item.coverageCount || 1));
+            return counts;
+          }, {});
+          const reportTopics = [...reportEntries.reduce((topics, item) => {
+            const rawTopic = String(item.topic || '').trim();
+            const mappedTopic = reputationTopicLabel(rawTopic, item.title);
+            const topic = /[가-힣]/.test(mappedTopic) ? mappedTopic : String(item.title || '소재 미분류');
+            topics.set(topic, (topics.get(topic) || 0) + Math.max(1, Number(item.coverageCount || 1)));
+            return topics;
+          }, new Map())].sort((left, right) => right[1] - left[1]);
+          const toneSummary = ['우호', '중립', '비판', '판단 보류'].filter(tone => reportToneCounts[tone]).map(tone => tone + ' ' + reportToneCounts[tone]).join(' · ');
+          const topicSummary = reportTopics.length ? '<div class="primary-report-topics">' + reportTopics.slice(0, 5).map(([topic, count]) => '<span class="primary-report-topic">' + esc(topic) + ' · ' + esc(count) + '건</span>').join('') + '</div>' : '';
+          const reportOverview = '<div class="primary-report-overview"><strong>현재 주 대상 대외 PR 흐름</strong><br>자사 블로그를 제외한 언론보도·온라인 게시글 ' + esc(reportEntries.length) + '개 대표 항목, 추가 보도 포함 ' + esc(reportExposureCount) + '건입니다. 평판 분류는 ' + esc(toneSummary || '집계 가능한 항목 없음') + '입니다.' + topicSummary + '</div>';
+          const newsCount = entries.filter(item => item.sourceLabel === '언론 보도' || item.sourceLabel === '공시·기관').length;
+          const blogCount = entries.filter(item => item.sourceLabel === '자사 블로그 글' || item.sourceLabel === '온라인 게시글').length;
+          const attentionCount = entries
+            .filter(item => item.sourceLabel !== '온라인 게시글')
+            .filter(item => item.reputationRisk === '높음' || item.tone === '비판')
+            .reduce((sum, item) => sum + Math.max(1, Number(item.coverageCount || 1)), 0);
+          const entryRows = primaryArticleRows(entries);
+          candidateSection.innerHTML = '<h3>주 대상 관련 PR 리포트</h3><div class="muted">' + esc(historyScope) + ' 보관 기록 기준 · 전체 ' + esc(reputationData.contentCount || entries.length) + '건 · 자사 블로그 ' + esc(reputationData.blogContentCount ?? blogCount) + '건(아래 리포트 제외) · 평판 주의 신호 ' + esc(attentionCount) + '건</div>' + reportOverview + '<div class="primary-pr-toolbar"><p class="muted">매체·기자·소재·내용과 평판 판단을 항목별로 정리했습니다.</p><div class="primary-pr-filter" role="group" aria-label="주 대상 기사 출처 필터"><button type="button" data-filter="media" aria-pressed="true">언론보도</button><button type="button" data-filter="online" aria-pressed="false">온라인 게시글</button></div></div><div class="primary-pr-search-controls"><input id="primary-pr-search" type="search" placeholder="제목·매체·기자·소재 검색" aria-label="주 대상 PR 검색"><label>시작 <input id="primary-pr-start" type="date" aria-label="발행일 시작"></label><label>종료 <input id="primary-pr-end" type="date" aria-label="발행일 종료"></label></div>' + (entryRows ? '<div class="primary-article-table-wrap"><table class="primary-article-table"><thead><tr><th>발행일</th><th>매체 · 기자</th><th>기사 제목</th><th>평판 신호</th></tr></thead><tbody>' + entryRows + '</tbody></table></div>' : '<div class="empty">누적된 주 대상 관련 기사·콘텐츠가 없습니다.</div>');
+          const articleMoreButton = document.createElement('button');
+          articleMoreButton.type = 'button';
+          articleMoreButton.className = 'primary-article-more';
+          articleMoreButton.hidden = true;
+          const articleTableWrap = candidateSection.querySelector('.primary-article-table-wrap');
+          if (articleTableWrap) articleTableWrap.after(articleMoreButton);
+          const filterButtons = [...candidateSection.querySelectorAll('.primary-pr-filter button')];
+          let activeSourceFilter = 'media';
+          const searchInput = candidateSection.querySelector('#primary-pr-search');
+          const startDateInput = candidateSection.querySelector('#primary-pr-start');
+          const endDateInput = candidateSection.querySelector('#primary-pr-end');
+          let showAllArticles = false;
+          const applyArticleFilters = () => {
+            const query = String(searchInput?.value || '').trim().toLocaleLowerCase('ko-KR');
+            const startDate = String(startDateInput?.value || '');
+            const endDate = String(endDateInput?.value || '');
+            const rows = [...candidateSection.querySelectorAll('.primary-article-table tbody tr')];
+            let matchingCount = 0;
+            rows.forEach(row => {
+              const sourceMatches = activeSourceFilter === 'online'
+                ? ['online', 'owned-blog'].includes(row.dataset.source)
+                : activeSourceFilter === 'all'
+                  ? row.dataset.source !== 'owned-blog'
+                  : row.dataset.source === 'media';
+              const date = row.dataset.date || '';
+              const dateMatches = (!startDate || date >= startDate) && (!endDate || date <= endDate);
+              const textMatches = !query || String(row.dataset.search || '').includes(query);
+              const matches = sourceMatches && dateMatches && textMatches;
+              row.hidden = !matches || (!showAllArticles && matchingCount >= 5);
+              if (matches) matchingCount += 1;
+            });
+            const remainingCount = Math.max(0, matchingCount - 5);
+            articleMoreButton.hidden = remainingCount === 0;
+            articleMoreButton.textContent = showAllArticles ? '접기' : `나머지 ${remainingCount}건 보기`;
+          };
+          const applySourceFilter = filter => {
+            activeSourceFilter = filter;
+            filterButtons.forEach(item => item.setAttribute('aria-pressed', String(item.dataset.filter === filter)));
+            applyArticleFilters();
+          };
+          searchInput?.addEventListener('input', applyArticleFilters);
+          startDateInput?.addEventListener('change', applyArticleFilters);
+          endDateInput?.addEventListener('change', applyArticleFilters);
+          articleMoreButton.addEventListener('click', () => {
+            showAllArticles = !showAllArticles;
+            applyArticleFilters();
+          });
+          filterButtons.forEach(button => button.addEventListener('click', () => applySourceFilter(button.dataset.filter)));
+          applySourceFilter('media');
+          const candidateRows = (data.candidates || []).map(item => {
+            const topics = (item.mainTopics || []).slice(0, 2).map(esc).join(' · ');
+            const sourceTitles = (item.sourceArticles || []).flatMap(article => [article.title, article.publisher]);
+            const searchable = [item.name, ...(item.mainTopics || []), item.reason, ...sourceTitles].join(' ').toLocaleLowerCase('ko-KR');
+            return `<tr data-search="${esc(searchable)}"><td><b>${esc(item.name)}</b></td><td>${esc(item.issueCount)}개 이슈${topics ? `<small class="candidate-issue-topics">${topics}</small>` : ''}</td><td>${esc(item.exposureCount)}건</td><td>${esc(item.reason)}</td><td>${sourceLinks(item.sourceArticles) || '원문 링크 없음'}</td></tr>`;
+          }).join('');
+          const candidateCard = document.createElement('section');
+          candidateCard.className = 'card';
+          candidateCard.innerHTML = `<h3>신규 모니터링 후보 (${esc((data.candidates || []).length)})</h3><div class="muted candidate-scope-note">기준 기간: ${esc(historyScope)} · 이슈는 서로 다른 보도 주제 수, 노출은 개별 기사 수입니다.</div>${candidateRows ? `<input class="candidate-search" type="search" placeholder="기업·소재 검색" aria-label="기업·소재 검색"><table><thead><tr><th>기업</th><th>이슈</th><th>노출</th><th>선정 이유</th><th>원문</th></tr></thead><tbody>${candidateRows}</tbody></table>` : '<div class="empty">현재 신규 모니터링 후보가 없습니다.</div>'}`;
+          candidateSection.parentElement?.after(candidateCard);
+          const candidateSearchInput = candidateCard.querySelector('.candidate-search');
+          candidateSearchInput?.addEventListener('input', () => {
+            const query = String(candidateSearchInput.value || '').trim().toLocaleLowerCase('ko-KR');
+            candidateCard.querySelectorAll('tbody tr[data-search]').forEach(row => {
+              row.hidden = Boolean(query) && !String(row.dataset.search || '').includes(query);
+            });
+          });
+        }
+      }
+      fetch('/api/competitor-insights').then(response => { if (!response.ok) throw new Error('분석 서버가 실행 중이 아닙니다.'); return response.json(); }).then(render).catch(error => { content.textContent = `${error.message} 먼저 PR 분석 서버를 실행해 주세요.`; });
+    </script>
+  </body>
+</html>
